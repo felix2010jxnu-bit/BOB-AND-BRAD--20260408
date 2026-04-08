@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>亚马逊运营绩效系统 V4.0（严格权限版）</title>
+    <title>亚马逊运营绩效系统 V4.1（最终稳定版）</title>
     <style>
         :root { --primary:#232f3e; --accent:#ff9900; --bg:#f4f7f6; --border:#e0e0e0; }
         body { font-family: 'PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); margin:0; padding:20px; font-size:13px; color:#333; }
@@ -32,7 +32,6 @@
         .del-member { color:red; cursor:pointer; font-size:12px; }
         .toolbar { position:sticky; top:10px; z-index:10; background:#fff; padding:12px; border:1px solid #ddd; border-radius:8px; margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; }
         .print-btn { background:#ff9900; color:white; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:bold; border:none; }
-        .export-all-btn { background:#28a745; color:white; padding:8px 14px; border-radius:4px; cursor:pointer; font-weight:bold; border:none; }
         header { border-bottom:2px solid var(--accent); margin-bottom:20px; padding-bottom:15px; text-align:center; }
         .meta-row { display:grid; grid-template-columns:repeat(3,1fr); gap:15px; margin-top:15px; }
         .meta-row input { width:100%; padding:8px; border:1px solid #ccc; border-radius:4px; box-sizing:border-box; }
@@ -51,9 +50,6 @@
         .grade-table th { background:#f0f4f8; }
         .footer { background:#232f3e; color:white; padding:15px; margin-top:20px; border-radius:6px; display:flex; justify-content:space-between; font-size:13px; }
         .score-num { color:#ff9900; font-size:24px; font-weight:bold; }
-        #allScoreContainer { display:none; margin-top:30px; }
-        #allScoreTable { width:100%; border-collapse:collapse; }
-        #allScoreTable th,#allScoreTable td { border:1px solid #333; padding:8px; text-align:center; }
         .page { display:none; }
         .page.active { display:block; }
         .hide { display:none !important; }
@@ -74,9 +70,9 @@
 
 <!-- 改密 -->
 <div id="resetPanel" class="login-box hide">
-    <h2>密码管理</h2>
-    <input id="resetUser" placeholder="账号姓名">
-    <input id="oldPwd" type="password" placeholder="旧密码">
+    <h2>修改密码</h2>
+    <input id="resetUser" placeholder="账号（自动填充）" disabled>
+    <input id="oldPwd" type="password" placeholder="当前密码">
     <input id="newPwd" type="password" placeholder="新密码">
     <button onclick="resetPassword()">确认修改</button>
     <button style="background:#6c757d" onclick="backToLogin()">返回</button>
@@ -85,9 +81,9 @@
 <!-- 主界面 -->
 <div id="mainPage" class="container hide">
     <div class="user-info">
-        <div>用户：<span id="u-name"></span>｜身份：<span id="u-role"></span>｜组别：<span id="u-group"></span></div>
+        <div>用户：<span id="u-name"></span>｜身份：<span id="u-role"></span></div>
         <div>
-            <button class="reset-btn" onclick="showResetPanel()">改密</button>
+            <button class="reset-btn" onclick="showResetPanel()">修改密码</button>
             <button class="manage-btn hide" id="gotoManageBtn" onclick="goManage()">人员管理</button>
             <span class="logout" onclick="logout()">退出</span>
         </div>
@@ -233,7 +229,7 @@
 
         <div class="footer">
             <div>总分：<span class="score-num" id="total">0</span>｜等级：<span id="grade">-</span></div>
-            <div>绩效系统 V4.0</div>
+            <div>绩效系统 V4.1</div>
         </div>
     </div>
 
@@ -247,49 +243,59 @@
                     <option value="staff">运营专员</option>
                     <option value="leader">运营主管</option>
                 </select>
-                <input id="newGroup" placeholder="分组" style="width:100px;">
                 <button onclick="addMember()" style="padding:6px 12px;background:#28a745;color:white;border:none;border-radius:4px;">添加</button>
             </div>
             <div class="member-list" id="memberList"></div>
-            <div style="font-size:12px;color:#666;">只有在列表内的人员才可登录系统</div>
+            <div style="font-size:12px;color:#666;">添加后即可用姓名 + 初始密码 flige5401 登录</div>
         </div>
     </div>
 </div>
 
 <script>
-    let userData = {
+    // ====================== 账号数据（修复登录）======================
+    let userAccounts = {
         "经理": { role: "manager", pwd: "flige5401" }
     };
+
     let currentUser = null;
 
-    // 页面切换
+    // ====================== 页面切换 ======================
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`.nav-btn[data-page=${id}]`)?.classList.add('active');
     }
 
-    // 去人员管理
     function goManage() {
         showPage('managePage');
         renderMemberList();
     }
 
-    // 登录
+    // ====================== 登录 ======================
     function login() {
         const name = document.getElementById('username').value.trim();
         const pwd = document.getElementById('password').value.trim();
-        if (!userData[name] || userData[name].pwd !== pwd) { alert('账号或密码错误'); return; }
-        currentUser = { name, ...userData[name] };
+
+        if (!userAccounts[name]) {
+            alert('账号不存在，请联系经理添加');
+            return;
+        }
+        if (userAccounts[name].pwd !== pwd) {
+            alert('密码错误');
+            return;
+        }
+
+        currentUser = { name, ...userAccounts[name] };
         document.getElementById('loginPage').classList.add('hide');
         document.getElementById('mainPage').classList.remove('hide');
         document.getElementById('u-name').innerText = name;
-        document.getElementById('u-role').innerText = currentUser.role === 'manager' ? '运营经理' : currentUser.role === 'leader' ? '运营主管' : '运营专员';
         document.getElementById('m-name').value = name;
+
         if (currentUser.role === 'manager') {
             document.getElementById('gotoManageBtn').classList.remove('hide');
         }
+
+        refreshRoleText();
         applyPermissions();
         calcScore();
     }
@@ -300,36 +306,50 @@
         document.getElementById('loginPage').classList.remove('hide');
     }
 
+    // ====================== 修改密码（所有人可用）======================
+    function showResetPanel() {
+        document.getElementById('loginPage').classList.add('hide');
+        document.getElementById('mainPage').classList.add('hide');
+        document.getElementById('resetPanel').classList.remove('hide');
+        document.getElementById('resetUser').value = currentUser ? currentUser.name : '';
+    }
+
     function backToLogin() {
         document.getElementById('resetPanel').classList.add('hide');
         document.getElementById('loginPage').classList.remove('hide');
     }
 
-    function showResetPanel() {
-        document.getElementById('loginPage').classList.add('hide');
-        document.getElementById('mainPage').classList.add('hide');
-        document.getElementById('resetPanel').classList.remove('hide');
-    }
-
     function resetPassword() {
-        const target = document.getElementById('resetUser').value.trim();
+        if (!currentUser) {
+            alert('请先登录');
+            return;
+        }
+
         const oldPwd = document.getElementById('oldPwd').value.trim();
         const newPwd = document.getElementById('newPwd').value.trim();
-        if (!target || !userData[target] || !newPwd) { alert('信息不完整'); return; }
-        if (currentUser.role !== 'manager' && currentUser.name !== target) { alert('无权修改'); return; }
-        if (currentUser.role !== 'manager' && userData[target].pwd !== oldPwd) { alert('旧密码错误'); return; }
-        userData[target].pwd = newPwd;
-        alert('修改成功');
-        backToLogin();
+
+        if (!oldPwd || !newPwd) {
+            alert('请填写完整');
+            return;
+        }
+
+        if (userAccounts[currentUser.name].pwd !== oldPwd) {
+            alert('当前密码错误');
+            return;
+        }
+
+        userAccounts[currentUser.name].pwd = newPwd;
+        alert('密码修改成功！请使用新密码登录');
+        logout();
     }
 
-    // 人员管理
+    // ====================== 人员管理（经理专用）======================
     function renderMemberList() {
         const box = document.getElementById('memberList');
         box.innerHTML = '';
-        for (let name in userData) {
+        for (let name in userAccounts) {
             if (name === '经理') continue;
-            const u = userData[name];
+            const u = userAccounts[name];
             const div = document.createElement('div');
             div.className = 'member-item';
             div.innerHTML = `
@@ -343,52 +363,81 @@
     function addMember() {
         const name = document.getElementById('newName').value.trim();
         const role = document.getElementById('newRole').value;
-        if (!name || userData[name]) { alert('姓名无效或已存在'); return; }
-        userData[name] = { role, pwd: 'flige5401' };
+        if (!name) { alert('请输入姓名'); return; }
+        if (userAccounts[name]) { alert('已存在'); return; }
+
+        userAccounts[name] = {
+            role: role,
+            pwd: "flige5401"
+        };
+
         document.getElementById('newName').value = '';
         renderMemberList();
+        alert('添加成功！\n姓名：' + name + '\n初始密码：flige5401');
     }
 
     function delMember(name) {
-        if (!confirm('确定删除？该账号将无法登录')) return;
-        delete userData[name];
+        if (!confirm('确定删除 ' + name + '？该账号将无法登录')) return;
+        delete userAccounts[name];
         renderMemberList();
     }
 
-    // 权限控制（严格按你要求）
+    // ====================== 权限控制（完全按你要求）======================
     function applyPermissions() {
-        const allInputs = document.querySelectorAll('input, textarea');
-        allInputs.forEach(el => { el.disabled = true; el.style.background = '#e9ecef'; });
+        const all = document.querySelectorAll('input, textarea');
+        all.forEach(el => { el.disabled = true; });
 
-        if (currentUser.role === 'manager') {
-            allInputs.forEach(el => el.disabled = false);
+        const role = currentUser.role;
+
+        // 经理：全部可写
+        if (role === 'manager') {
+            all.forEach(el => el.disabled = false);
             return;
         }
 
-        if (currentUser.role === 'staff') {
-            const enable = [
+        // 专员
+        if (role === 'staff') {
+            const canEdit = [
                 'p2-1','p2-1-1','p2-1-2','p2-1-3','p2-1-4','p2-2',
                 'p3-1','p3-2','p3-3','m-month','m-site'
             ];
-            enable.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+            canEdit.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = false;
+            });
             return;
         }
 
-        if (currentUser.role === 'leader') {
-            const enableContent = [
+        // 主管（自评）
+        if (role === 'leader') {
+            const leaderSelf = [
                 'p4-1','p4-2','p4-3','p4-4','p4-5','p4-6',
                 'm-month','m-site'
             ];
-            enableContent.forEach(id => { const el = document.getElementById(id); if (el) el.disabled = false; });
+            leaderSelf.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.disabled = false;
+            });
             return;
         }
     }
 
-    // 计算总分
+    // ====================== 工具 ======================
+    function refreshRoleText() {
+        const map = {
+            'manager': '运营经理',
+            'leader': '运营主管',
+            'staff': '运营专员'
+        };
+        document.getElementById('u-role').innerText = map[currentUser.role] || '';
+    }
+
     function calcScore() {
         let total = 0;
         const scores = ['s1-1','s1-2','s2-1','s2-2','s2-3','s3-1','s3-2','s3-3','s5-1','s5-2'];
-        scores.forEach(id => { total += Number(document.getElementById(id)?.value) || 0; });
+        scores.forEach(id => {
+            total += Number(document.getElementById(id)?.value) || 0;
+        });
         document.getElementById('total').innerText = total;
         let g = 'D';
         if (total >= 95) g = 'S';
