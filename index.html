@@ -2,10 +2,10 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>亚马逊运营绩效系统 V4.2（分组版）</title>
+    <title>亚马逊运营绩效系统 V4.3（永久稳定版）</title>
     <style>
         :root { --primary:#232f3e; --accent:#ff9900; --bg:#f4f7f6; --border:#e0e0e0; }
-        body { font-family: 'PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); margin:0; padding:20px; font-size:13px; color:#333; }
+        body { font-family:'PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); margin:0; padding:20px; font-size:13px; color:#333; }
         .container { max-width:1250px; margin:0 auto; background:#fff; padding:25px; border-radius:10px; box-shadow:0 4px 20px rgba(0,0,0,0.08); }
         .login-box { max-width:420px; margin:80px auto; padding:30px; background:#fff; border-radius:10px; text-align:center; box-shadow:0 4px 15px rgba(0,0,0,0.1); }
         .login-box h2 { margin-bottom:20px; color:#232f3e; }
@@ -58,7 +58,6 @@
 </head>
 <body>
 
-<!-- 登录 -->
 <div id="loginPage" class="login-box">
     <h2>绩效系统登录</h2>
     <input id="username" placeholder="姓名">
@@ -68,17 +67,15 @@
     <div class="tip">初始统一密码：flige5401</div>
 </div>
 
-<!-- 改密 -->
 <div id="resetPanel" class="login-box hide">
     <h2>修改密码</h2>
-    <input id="resetUser" placeholder="账号（自动填充）" disabled>
+    <input id="resetUser" disabled>
     <input id="oldPwd" type="password" placeholder="当前密码">
     <input id="newPwd" type="password" placeholder="新密码">
     <button onclick="resetPassword()">确认修改</button>
     <button style="background:#6c757d" onclick="backToLogin()">返回</button>
 </div>
 
-<!-- 主界面 -->
 <div id="mainPage" class="container hide">
     <div class="user-info">
         <div>用户：<span id="u-name"></span>｜身份：<span id="u-role"></span>｜组别：<span id="u-group"></span></div>
@@ -93,7 +90,6 @@
         <button class="nav-btn active" onclick="showPage('perfPage')">绩效考核</button>
     </div>
 
-    <!-- 绩效页面 -->
     <div id="perfPage" class="page active">
         <div class="toolbar">
             <button class="print-btn" onclick="exportSinglePDF()">导出PDF</button>
@@ -229,11 +225,10 @@
 
         <div class="footer">
             <div>总分：<span class="score-num" id="total">0</span>｜等级：<span id="grade">-</span></div>
-            <div>绩效系统 V4.2（分组版）</div>
+            <div>绩效系统 V4.3（永久稳定）</div>
         </div>
     </div>
 
-    <!-- 人员管理页面（仅经理可见） -->
     <div id="managePage" class="page">
         <div class="manager-panel">
             <div class="panel-title">📋 人员管理（仅经理可见）</div>
@@ -247,51 +242,45 @@
                 <button onclick="addMember()" style="padding:6px 12px;background:#28a745;color:white;border:none;border-radius:4px;">添加</button>
             </div>
             <div class="member-list" id="memberList"></div>
-            <div style="font-size:12px;color:#666;">添加后即可用姓名 + 初始密码 flige5401 登录</div>
+            <div style="font-size:12px;color:#666;">添加后立即生效，姓名+初始密码 flige5401 登录</div>
         </div>
     </div>
 </div>
 
 <script>
-    // ====================== 账号数据（修复登录 + 新增组名）======================
-    let userAccounts = {
-        "经理": { role: "manager", pwd: "flige5401", group: "总管理" }
-    };
+    // ====================== 核心修复：本地永久存储账号 ======================
+    function saveAccounts() { localStorage.setItem("perfAccounts", JSON.stringify(userAccounts)); }
+    function loadAccounts() {
+        const data = localStorage.getItem("perfAccounts");
+        if (data) return JSON.parse(data);
+        return { "经理": { role: "manager", pwd: "flige5401", group: "总管理" } };
+    }
 
+    let userAccounts = loadAccounts();
     let currentUser = null;
 
-    // ====================== 页面切换 ======================
+    // ====================== 页面 ======================
     function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
         document.getElementById(id).classList.add('active');
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
     }
-
-    function goManage() {
-        showPage('managePage');
-        renderMemberList();
-    }
+    function goManage() { showPage('managePage'); renderMemberList(); }
 
     // ====================== 登录 ======================
     function login() {
         const name = document.getElementById('username').value.trim();
         const pwd = document.getElementById('password').value.trim();
+        userAccounts = loadAccounts();
 
-        if (!userAccounts[name]) {
-            alert('账号不存在，请联系经理添加');
-            return;
-        }
-        if (userAccounts[name].pwd !== pwd) {
-            alert('密码错误');
-            return;
-        }
+        if (!userAccounts[name]) { alert('账号不存在，请联系经理添加'); return; }
+        if (userAccounts[name].pwd !== pwd) { alert('密码错误'); return; }
 
         currentUser = { name, ...userAccounts[name] };
         document.getElementById('loginPage').classList.add('hide');
         document.getElementById('mainPage').classList.remove('hide');
         document.getElementById('u-name').innerText = name;
-        document.getElementById('m-name').value = name;
         document.getElementById('u-group').innerText = currentUser.group || '-';
+        document.getElementById('m-name').value = name;
 
         if (currentUser.role === 'manager') {
             document.getElementById('gotoManageBtn').classList.remove('hide');
@@ -308,45 +297,32 @@
         document.getElementById('loginPage').classList.remove('hide');
     }
 
-    // ====================== 修改密码（所有人可用）======================
+    // ====================== 修改密码 ======================
     function showResetPanel() {
         document.getElementById('loginPage').classList.add('hide');
         document.getElementById('mainPage').classList.add('hide');
         document.getElementById('resetPanel').classList.remove('hide');
-        document.getElementById('resetUser').value = currentUser ? currentUser.name : '';
+        document.getElementById('resetUser').value = currentUser?.name || '';
     }
-
     function backToLogin() {
         document.getElementById('resetPanel').classList.add('hide');
         document.getElementById('loginPage').classList.remove('hide');
     }
-
     function resetPassword() {
-        if (!currentUser) {
-            alert('请先登录');
-            return;
-        }
-
-        const oldPwd = document.getElementById('oldPwd').value.trim();
-        const newPwd = document.getElementById('newPwd').value.trim();
-
-        if (!oldPwd || !newPwd) {
-            alert('请填写完整');
-            return;
-        }
-
-        if (userAccounts[currentUser.name].pwd !== oldPwd) {
-            alert('当前密码错误');
-            return;
-        }
-
-        userAccounts[currentUser.name].pwd = newPwd;
+        if (!currentUser) { alert('请先登录'); return; }
+        const old = document.getElementById('oldPwd').value.trim();
+        const newP = document.getElementById('newPwd').value.trim();
+        if (!old || !newP) { alert('请填写完整'); return; }
+        if (userAccounts[currentUser.name].pwd !== old) { alert('当前密码错误'); return; }
+        userAccounts[currentUser.name].pwd = newP;
+        saveAccounts();
         alert('密码修改成功！请使用新密码登录');
         logout();
     }
 
-    // ====================== 人员管理（经理专用 + 组名）======================
+    // ====================== 人员管理（永久保存） ======================
     function renderMemberList() {
+        userAccounts = loadAccounts();
         const box = document.getElementById('memberList');
         box.innerHTML = '';
         for (let name in userAccounts) {
@@ -354,10 +330,7 @@
             const u = userAccounts[name];
             const div = document.createElement('div');
             div.className = 'member-item';
-            div.innerHTML = `
-                <div>${name}｜${u.role === 'leader' ? '主管' : '专员'}｜组名：${u.group || '-'}</div>
-                <div><span class='del-member' onclick='delMember("${name}")'>删除</span></div>
-            `;
+            div.innerHTML = `<div>${name}｜${u.role==='leader'?'主管':'专员'}｜组：${u.group||'-'}</div><div><span class='del-member' onclick='delMember("${name}")'>删除</span></div>`;
             box.appendChild(div);
         }
     }
@@ -367,93 +340,58 @@
         const role = document.getElementById('newRole').value;
         const group = document.getElementById('newGroup').value.trim();
         if (!name) { alert('请输入姓名'); return; }
-        if (userAccounts[name]) { alert('该姓名已存在'); return; }
+        userAccounts = loadAccounts();
+        if (userAccounts[name]) { alert('已存在'); return; }
 
-        userAccounts[name] = {
-            role: role,
-            pwd: "flige5401",
-            group: group || "未分组"
-        };
-
+        userAccounts[name] = { role, pwd: "flige5401", group: group || "未分组" };
+        saveAccounts();
         document.getElementById('newName').value = '';
         document.getElementById('newGroup').value = '';
         renderMemberList();
-        alert('添加成功！\n姓名：' + name + '\n组名：' + (group || '未分组') + '\n初始密码：flige5401');
+        alert('添加成功！\n'+name+'\n组：'+(group||'未分组')+'\n初始密码：flige5401');
     }
 
     function delMember(name) {
-        if (!confirm('确定删除 ' + name + '？该账号将无法登录')) return;
+        if (!confirm('确定删除 '+name+'？')) return;
+        userAccounts = loadAccounts();
         delete userAccounts[name];
+        saveAccounts();
         renderMemberList();
     }
 
-    // ====================== 权限控制（完全按你要求）======================
+    // ====================== 权限 ======================
     function applyPermissions() {
-        const all = document.querySelectorAll('input, textarea');
-        all.forEach(el => { el.disabled = true; });
-
-        const role = currentUser.role;
-
-        // 经理：全部可写
-        if (role === 'manager') {
-            all.forEach(el => el.disabled = false);
-            return;
+        const all = document.querySelectorAll('input,textarea');
+        all.forEach(el=>el.disabled=true);
+        const role = currentUser?.role;
+        if (role==='manager'){ all.forEach(el=>el.disabled=false); return; }
+        if (role==='staff'){
+            const allow = ['p2-1','p2-1-1','p2-1-2','p2-1-3','p2-1-4','p2-2','p3-1','p3-2','p3-3','m-month','m-site'];
+            allow.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false;});
         }
-
-        // 专员
-        if (role === 'staff') {
-            const canEdit = [
-                'p2-1','p2-1-1','p2-1-2','p2-1-3','p2-1-4','p2-2',
-                'p3-1','p3-2','p3-3','m-month','m-site'
-            ];
-            canEdit.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.disabled = false;
-            });
-            return;
-        }
-
-        // 主管（自评）
-        if (role === 'leader') {
-            const leaderSelf = [
-                'p4-1','p4-2','p4-3','p4-4','p4-5','p4-6',
-                'm-month','m-site'
-            ];
-            leaderSelf.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.disabled = false;
-            });
-            return;
+        if (role==='leader'){
+            const allow = ['p4-1','p4-2','p4-3','p4-4','p4-5','p4-6','m-month','m-site'];
+            allow.forEach(id=>{const el=document.getElementById(id);if(el)el.disabled=false;});
         }
     }
 
-    // ====================== 工具 ======================
     function refreshRoleText() {
-        const map = {
-            'manager': '运营经理',
-            'leader': '运营主管',
-            'staff': '运营专员'
-        };
-        document.getElementById('u-role').innerText = map[currentUser.role] || '';
+        const map={manager:'运营经理',leader:'运营主管',staff:'运营专员'};
+        document.getElementById('u-role').innerText=map[currentUser.role]||'';
     }
 
     function calcScore() {
-        let total = 0;
-        const scores = ['s1-1','s1-2','s2-1','s2-2','s2-3','s3-1','s3-2','s3-3','s5-1','s5-2'];
-        scores.forEach(id => {
-            total += Number(document.getElementById(id)?.value) || 0;
-        });
-        document.getElementById('total').innerText = total;
-        let g = 'D';
-        if (total >= 95) g = 'S';
-        else if (total >= 85) g = 'A';
-        else if (total >= 75) g = 'B';
-        else if (total >= 60) g = 'C';
-        document.getElementById('grade').innerText = g;
+        let total=0;
+        const ids=['s1-1','s1-2','s2-1','s2-2','s2-3','s3-1','s3-2','s3-3','s5-1','s5-2'];
+        ids.forEach(id=>total+=Number(document.getElementById(id)?.value)||0);
+        document.getElementById('total').innerText=total;
+        let g='D';
+        if(total>=95)g='S';else if(total>=85)g='A';else if(total>=75)g='B';else if(total>=60)g='C';
+        document.getElementById('grade').innerText=g;
     }
 
-    function exportSinglePDF() { window.print(); }
-    document.querySelectorAll('input,textarea').forEach(el => el.addEventListener('input', calcScore));
+    function exportSinglePDF(){window.print();}
+    document.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',calcScore));
 </script>
 </body>
 </html>
