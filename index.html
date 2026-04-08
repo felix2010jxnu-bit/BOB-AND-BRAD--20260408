@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <title>亚马逊运营绩效系统 V4.1（最终稳定版）</title>
+    <title>亚马逊运营绩效系统 V4.2（分组版）</title>
     <style>
         :root { --primary:#232f3e; --accent:#ff9900; --bg:#f4f7f6; --border:#e0e0e0; }
         body { font-family: 'PingFang SC','Microsoft YaHei',sans-serif; background:var(--bg); margin:0; padding:20px; font-size:13px; color:#333; }
@@ -81,7 +81,7 @@
 <!-- 主界面 -->
 <div id="mainPage" class="container hide">
     <div class="user-info">
-        <div>用户：<span id="u-name"></span>｜身份：<span id="u-role"></span></div>
+        <div>用户：<span id="u-name"></span>｜身份：<span id="u-role"></span>｜组别：<span id="u-group"></span></div>
         <div>
             <button class="reset-btn" onclick="showResetPanel()">修改密码</button>
             <button class="manage-btn hide" id="gotoManageBtn" onclick="goManage()">人员管理</button>
@@ -229,7 +229,7 @@
 
         <div class="footer">
             <div>总分：<span class="score-num" id="total">0</span>｜等级：<span id="grade">-</span></div>
-            <div>绩效系统 V4.1</div>
+            <div>绩效系统 V4.2（分组版）</div>
         </div>
     </div>
 
@@ -243,6 +243,7 @@
                     <option value="staff">运营专员</option>
                     <option value="leader">运营主管</option>
                 </select>
+                <input id="newGroup" placeholder="组名" style="width:100px;">
                 <button onclick="addMember()" style="padding:6px 12px;background:#28a745;color:white;border:none;border-radius:4px;">添加</button>
             </div>
             <div class="member-list" id="memberList"></div>
@@ -252,9 +253,9 @@
 </div>
 
 <script>
-    // ====================== 账号数据（修复登录）======================
+    // ====================== 账号数据（修复登录 + 新增组名）======================
     let userAccounts = {
-        "经理": { role: "manager", pwd: "flige5401" }
+        "经理": { role: "manager", pwd: "flige5401", group: "总管理" }
     };
 
     let currentUser = null;
@@ -290,6 +291,7 @@
         document.getElementById('mainPage').classList.remove('hide');
         document.getElementById('u-name').innerText = name;
         document.getElementById('m-name').value = name;
+        document.getElementById('u-group').innerText = currentUser.group || '-';
 
         if (currentUser.role === 'manager') {
             document.getElementById('gotoManageBtn').classList.remove('hide');
@@ -343,7 +345,7 @@
         logout();
     }
 
-    // ====================== 人员管理（经理专用）======================
+    // ====================== 人员管理（经理专用 + 组名）======================
     function renderMemberList() {
         const box = document.getElementById('memberList');
         box.innerHTML = '';
@@ -353,7 +355,7 @@
             const div = document.createElement('div');
             div.className = 'member-item';
             div.innerHTML = `
-                <div>${name}｜${u.role === 'leader' ? '主管' : '专员'}</div>
+                <div>${name}｜${u.role === 'leader' ? '主管' : '专员'}｜组名：${u.group || '-'}</div>
                 <div><span class='del-member' onclick='delMember("${name}")'>删除</span></div>
             `;
             box.appendChild(div);
@@ -363,17 +365,20 @@
     function addMember() {
         const name = document.getElementById('newName').value.trim();
         const role = document.getElementById('newRole').value;
+        const group = document.getElementById('newGroup').value.trim();
         if (!name) { alert('请输入姓名'); return; }
-        if (userAccounts[name]) { alert('已存在'); return; }
+        if (userAccounts[name]) { alert('该姓名已存在'); return; }
 
         userAccounts[name] = {
             role: role,
-            pwd: "flige5401"
+            pwd: "flige5401",
+            group: group || "未分组"
         };
 
         document.getElementById('newName').value = '';
+        document.getElementById('newGroup').value = '';
         renderMemberList();
-        alert('添加成功！\n姓名：' + name + '\n初始密码：flige5401');
+        alert('添加成功！\n姓名：' + name + '\n组名：' + (group || '未分组') + '\n初始密码：flige5401');
     }
 
     function delMember(name) {
