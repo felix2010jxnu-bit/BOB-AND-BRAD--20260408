@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="utf-8">
-<title>亚马逊运营绩效系统（最终版·主管可看组员）</title>
+<title>亚马逊运营绩效系统（最终稳定版·无空白页）</title>
 <style>
 :root{--primary:#232f3e;--accent:#ff9900;--bg:#f4f6f8;--border:#ddd}
 body{font-family:Microsoft YaHei, sans-serif; background:var(--bg); margin:0; padding:20px; font-size:14px}
@@ -10,24 +10,29 @@ body{font-family:Microsoft YaHei, sans-serif; background:var(--bg); margin:0; pa
 .login-box{max-width:400px; margin:80px auto; padding:30px; background:#fff; border-radius:12px; box-shadow:0 2px 10px rgba(0,0,0,.1)}
 .login-box input, .login-box button{width:100%; padding:12px; margin:8px 0; border-radius:6px; border:1px solid #ddd}
 button{cursor:pointer}
-.btn-primary{background:var(--accent); color:#fff; border:none}
-.btn-secondary{background:#0d6efd; color:#fff; border:none}
+.btn-primary{background:var(--accent); color:#fff; border:none; padding:8px 16px; border-radius:6px}
+.btn-secondary{background:#0d6efd; color:#fff; border:none; padding:8px 16px; border-radius:6px}
 .user-info{display:flex; justify-content:space-between; padding:12px 16px; background:#f8f9fa; border-radius:8px; margin-bottom:16px}
 .nav-bar{display:flex; gap:12px; margin-bottom:20px}
-.nav-btn{padding:8px 16px; border:1px solid #ddd; border-radius:6px}
-.nav-btn.active{background:#0d6efd; color:#fff}
+.nav-btn{padding:8px 16px; border:1px solid #ddd; border-radius:6px; background:#fff; cursor:pointer}
+.nav-btn.active{background:#0d6efd; color:#fff; border-color:#0d6efd}
 .section{border:1px solid var(--border); border-radius:8px; margin-bottom:20px}
 .section-header{background:var(--primary); color:#fff; padding:12px 16px; font-weight:bold}
-.row{display:flex; border-bottom:1px solid var(--border); padding:10px}
+.row{display:flex; border-bottom:1px solid var(--border); padding:10px; align-items:center}
 .col-metric{width:180px; font-weight:bold; padding-right:10px}
 .col-content{flex:1; padding-right:10px}
 .col-score{width:80px}
-textarea{width:100%; height:60px; box-sizing:border-box}
-input[type="number"]{width:100%; box-sizing:border-box}
+textarea{width:100%; height:60px; box-sizing:border-box; resize:vertical}
+input[type="number"]{width:100%; box-sizing:border-box; padding:6px}
+input[type="text"]{padding:6px; box-sizing:border-box}
 .page{display:none}
 .page.active{display:block}
-.member-list{margin-top:16px; max-height:300px; overflow:auto}
-.member-item{padding:10px; border-bottom:1px solid #eee}
+.member-list{margin-top:16px; max-height:300px; overflow:auto; border:1px solid #eee; border-radius:6px}
+.member-item{padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between; align-items:center}
+.member-item:last-child{border-bottom:none}
+.staff-page{display:none}
+.leader-page{display:none}
+.manager-page{display:none}
 .staff-only{display:none}
 .leader-only{display:none}
 .manager-only{display:none}
@@ -35,260 +40,567 @@ input[type="number"]{width:100%; box-sizing:border-box}
 </head>
 <body>
 
+<!-- 登录页 -->
 <div id="loginPage" class="page active">
   <div class="login-box">
     <h3>绩效系统登录</h3>
     <input id="loginUser" placeholder="姓名">
-    <input id="loginPwd" type="password" placeholder="密码：flige5401">
+    <input id="loginPwd" type="password" placeholder="初始密码：flige5401">
     <button class="btn-primary" onclick="login()">登录</button>
     <button class="btn-secondary" onclick="showResetPwd()">修改密码</button>
+    <div style="font-size:12px; color:#666; margin-top:8px">初始密码统一：flige5401</div>
   </div>
 </div>
 
+<!-- 修改密码页 -->
 <div id="resetPwdPage" class="page">
   <div class="login-box">
     <h3>修改密码</h3>
-    <input id="rpUser" disabled>
-    <input id="rpOld" placeholder="原密码">
-    <input id="rpNew" placeholder="新密码">
+    <input id="rpUser" disabled placeholder="账号">
+    <input id="rpOld" type="password" placeholder="原密码">
+    <input id="rpNew" type="password" placeholder="新密码">
     <button class="btn-primary" onclick="doResetPwd()">确认修改</button>
-    <button onclick="backToLogin()">返回</button>
+    <button class="btn-secondary" onclick="backToLogin()">返回</button>
   </div>
 </div>
 
+<!-- 主界面 -->
 <div id="mainPage" class="page">
   <div class="container">
+    <!-- 用户信息栏 -->
     <div class="user-info">
-      <div><span id="showName"></span>｜<span id="showRole"></span>｜组：<span id="showGroup"></span></div>
-      <div><button onclick="logout()">退出</button></div>
-    </div>
-
-    <div class="nav-bar">
-      <button class="nav-btn" onclick="showTab('self')">我的绩效</button>
-      <button class="nav-btn leader-only manager-only" onclick="showTab('team')">本组专员</button>
-      <button class="nav-btn manager-only" onclick="showTab('manage')">人员管理</button>
-    </div>
-
-    <div id="tab_self" class="page">
-      <div class="section staff-only leader-only">
-        <div class="section-header">一、业绩目标（20分）</div>
-        <div class="row">
-          <div class="col-metric">销售额完成率（10）</div>
-          <div class="col-content"><textarea id="p1_1"></textarea></div>
-          <div class="col-score"><input type="number" id="s1_1" max="10"></div>
-        </div>
-        <div class="row">
-          <div class="col-metric">利润率（10）</div>
-          <div class="col-content"><textarea id="p1_2"></textarea></div>
-          <div class="col-score"><input type="number" id="s1_2" max="10"></div>
-        </div>
-      </div>
-
-      <div class="section staff-only leader-only">
-        <div class="section-header">二、主动性与优化（30分）</div>
-        <div class="row">
-          <div class="col-metric">工作主动性（12）</div>
-          <div class="col-content"><textarea id="p2_1"></textarea></div>
-          <div class="col-score"><input type="number" id="s2_1" max="12"></div>
-        </div>
-        <div class="row">
-          <div class="col-metric">问题解决（12）</div>
-          <div class="col-content"><textarea id="p2_2"></textarea></div>
-          <div class="col-score"><input type="number" id="s2_2" max="12"></div>
-        </div>
-        <div class="row">
-          <div class="col-metric">优化建议（6）</div>
-          <div class="col-content"><textarea id="p2_3"></textarea></div>
-          <div class="col-score"><input type="number" id="s2_3" max="6"></div>
-        </div>
-      </div>
-
-      <div class="section staff-only">
-        <div class="section-header">三、日常运营（50分）——专员专属</div>
-        <div class="row">
-          <div class="col-metric">Listing维护（20）</div>
-          <div class="col-content"><textarea id="p3_1"></textarea></div>
-          <div class="col-score"><input type="number" id="s3_1" max="20"></div>
-        </div>
-        <div class="row">
-          <div class="col-metric">广告优化（15）</div>
-          <div class="col-content"><textarea id="p3_2"></textarea></div>
-          <div class="col-score"><input type="number" id="s3_2" max="15"></div>
-        </div>
-        <div class="row">
-          <div class="col-metric">库存管理（15）</div>
-          <div class="col-content"><textarea id="p3_3"></textarea></div>
-          <div class="col-score"><input type="number" id="s3_3" max="15"></div>
-        </div>
-      </div>
-
-      <div class="section leader-only">
-        <div class="section-header">四、团队管理（45分）——主管专属</div>
-        <div class="row">
-          <div class="col-metric">库存健康（15）</div>
-          <div class="col-content"><textarea id="p4_1"></textarea></div>
-          <div class="col-score"><input type="number" id="s4_1" max="15"></div>
-        </div>
-        <div class="row">
-          <div class="col-metric">人才培养（15）</div>
-          <div class="col-content"><textarea id="p4_2"></textarea></div>
-          <div class="col-score"><input type="number" id="s4_2" max="15"></div>
-        </div>
-        <div class="row">
-          <div class="col-metric">体系风控（15）</div>
-          <div class="col-content"><textarea id="p4_3"></textarea></div>
-          <div class="col-score"><input type="number" id="s4_3" max="15"></div>
-        </div>
-      </div>
-
-      <div class="section">
-        <div class="section-header">五、加减分项</div>
-        <div class="row">
-          <div class="col-metric">加分（上限10）</div>
-          <div class="col-content"><textarea id="p5_1"></textarea></div>
-          <div class="col-score"><input type="number" id="s5_1" max="10"></div>
-        </div>
-        <div class="row">
-          <div class="col-metric">扣分</div>
-          <div class="col-content"><textarea id="p5_2"></textarea></div>
-          <div class="col-score"><input type="number" id="s5_2"></div>
-        </div>
-      </div>
-
-      <div style="text-align:right; font-size:18px; font-weight:bold">
-        总分：<span id="total">0</span>｜等级：<span id="level">D</span>
-      </div>
-    </div>
-
-    <div id="tab_team" class="page">
-      <h3>本组运营专员</h3>
-      <div id="teamList"></div>
-    </div>
-
-    <div id="tab_manage" class="page">
-      <h3>人员管理</h3>
       <div>
+        <span id="showName"></span>
+        ｜<span id="showRole"></span>
+        ｜组：<span id="showGroup"></span>
+      </div>
+      <div>
+        <button class="btn-secondary" onclick="logout()">退出登录</button>
+      </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <div class="nav-bar">
+      <button class="nav-btn active" data-tab="self" onclick="showTab('self')">我的绩效</button>
+      <button class="nav-btn leader-only manager-only" data-tab="team" onclick="showTab('team')">本组专员</button>
+      <button class="nav-btn manager-only" data-tab="manage" onclick="showTab('manage')">人员管理</button>
+    </div>
+
+    <!-- 我的绩效页 -->
+    <div id="tab_self" class="page active">
+      <!-- 专员专属绩效页 -->
+      <div id="staffPerformance" class="staff-page">
+        <div class="section">
+          <div class="section-header">一、业绩目标（20分）【经理评分】</div>
+          <div class="row">
+            <div class="col-metric">销售额完成率（10分）</div>
+            <div class="col-content"><textarea id="p1_1" placeholder="填写实际销售额/目标销售额明细"></textarea></div>
+            <div class="col-score"><input type="number" id="s1_1" max="10"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">订单利润率（10分）</div>
+            <div class="col-content"><textarea id="p1_2" placeholder="成熟品≥25%/新品≥18%，附利润明细"></textarea></div>
+            <div class="col-score"><input type="number" id="s1_2" max="10"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">二、主动性与优化建议（30分）【主管评分】</div>
+          <div class="row">
+            <div class="col-metric">工作主动性（12分）</div>
+            <div class="col-content"><textarea id="p2_1" placeholder="竞品监测、视频产出、深度分析记录"></textarea></div>
+            <div class="col-score"><input type="number" id="s2_1" max="12"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">问题解决（12分）</div>
+            <div class="col-content"><textarea id="p2_2" placeholder="退货报告、异常响应记录"></textarea></div>
+            <div class="col-score"><input type="number" id="s2_2" max="12"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">优化建议（6分）</div>
+            <div class="col-content"><textarea id="p2_3" placeholder="流程/Listing/广告优化建议"></textarea></div>
+            <div class="col-score"><input type="number" id="s2_3" max="6"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">三、日常运营（50分）【主管评分】</div>
+          <div class="row">
+            <div class="col-metric">Listing维护（20分）</div>
+            <div class="col-content"><textarea id="p3_1" placeholder="日常维护、专项优化记录"></textarea></div>
+            <div class="col-score"><input type="number" id="s3_1" max="20"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">广告优化（15分）</div>
+            <div class="col-content"><textarea id="p3_2" placeholder="广告架构、否定词、竞价调整记录"></textarea></div>
+            <div class="col-score"><input type="number" id="s3_2" max="15"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">库存管理（15分）</div>
+            <div class="col-content"><textarea id="p3_3" placeholder="库存监控、断货/冗余规避记录"></textarea></div>
+            <div class="col-score"><input type="number" id="s3_3" max="15"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">四、加分/扣分项【经理评分】</div>
+          <div class="row">
+            <div class="col-metric">加分项（上限+10分）</div>
+            <div class="col-content"><textarea id="p5_1" placeholder="案例分享、流程创新等"></textarea></div>
+            <div class="col-score"><input type="number" id="s5_1" max="10"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric" style="color:red">扣分项（无下限）</div>
+            <div class="col-content"><textarea id="p5_2" placeholder="违规、操作失误等"></textarea></div>
+            <div class="col-score"><input type="number" id="s5_2"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">绩效等级标准</div>
+          <table style="width:100%; border-collapse:collapse; text-align:center">
+            <tr><th>等级</th><th>评价</th><th>分值区间</th><th>提成系数</th></tr>
+            <tr><td>S</td><td>卓越</td><td>≥95</td><td>1.0</td></tr>
+            <tr><td>A</td><td>优秀</td><td>85-94</td><td>1.0</td></tr>
+            <tr><td>B</td><td>良好</td><td>75-84</td><td>0.9</td></tr>
+            <tr><td>C</td><td>合格</td><td>60-74</td><td>0.6</td></tr>
+            <tr><td>D</td><td>不合格</td><td>&lt;60</td><td>0</td></tr>
+          </table>
+        </div>
+
+        <div style="text-align:right; font-size:18px; font-weight:bold; margin-top:20px">
+          总分：<span class="score-num" id="total_staff">0</span>｜等级：<span id="level_staff">D</span>
+        </div>
+      </div>
+
+      <!-- 主管专属绩效页 -->
+      <div id="leaderPerformance" class="leader-page">
+        <div class="section">
+          <div class="section-header">一、个人业绩目标（25分）【经理评分】</div>
+          <div class="row">
+            <div class="col-metric">销售与利润达成（10分）</div>
+            <div class="col-content"><textarea id="lp1_1" placeholder="个人销售额/利润率达成明细"></textarea></div>
+            <div class="col-score"><input type="number" id="ls1_1" max="10"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">库存健康管理（15分）</div>
+            <div class="col-content"><textarea id="lp1_2" placeholder="长期库存、库龄、异常规避记录"></textarea></div>
+            <div class="col-score"><input type="number" id="ls1_2" max="15"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">二、主动性与优化建议（30分）【经理评分】</div>
+          <div class="row">
+            <div class="col-metric">工作主动性（10分）</div>
+            <div class="col-content"><textarea id="lp2_1" placeholder="竞品监测、视频产出、深度分析"></textarea></div>
+            <div class="col-score"><input type="number" id="ls2_1" max="10"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">问题解决能力（10分）</div>
+            <div class="col-content"><textarea id="lp2_2" placeholder="退货报告、异常响应"></textarea></div>
+            <div class="col-score"><input type="number" id="ls2_2" max="10"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">创新优化贡献（10分）</div>
+            <div class="col-content"><textarea id="lp2_3" placeholder="流程/工具/方法创新"></textarea></div>
+            <div class="col-score"><input type="number" id="ls2_3" max="10"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">三、团队管理（45分）【经理评分】</div>
+          <div class="row">
+            <div class="col-metric">人才梯队与培养（15分）</div>
+            <div class="col-content"><textarea id="lp3_1" placeholder="人员稳定、培养、成长记录"></textarea></div>
+            <div class="col-score"><input type="number" id="ls3_1" max="15"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">体系沉淀与风控（15分）</div>
+            <div class="col-content"><textarea id="lp3_2" placeholder="SOP沉淀、账号风控、违规管理"></textarea></div>
+            <div class="col-score"><input type="number" id="ls3_2" max="15"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric">团队业绩目标（15分）</div>
+            <div class="col-content"><textarea id="lp3_3" placeholder="团队整体销售额/利润达成"></textarea></div>
+            <div class="col-score"><input type="number" id="ls3_3" max="15"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">四、加分/扣分项【经理评分】</div>
+          <div class="row">
+            <div class="col-metric">加分项（上限+10分）</div>
+            <div class="col-content"><textarea id="lp4_1" placeholder="内部分享、建议采纳等"></textarea></div>
+            <div class="col-score"><input type="number" id="ls4_1" max="10"></div>
+          </div>
+          <div class="row">
+            <div class="col-metric" style="color:red">扣分项（无下限）</div>
+            <div class="col-content"><textarea id="lp4_2" placeholder="团队违规、管理失误等"></textarea></div>
+            <div class="col-score"><input type="number" id="ls4_2"></div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-header">绩效等级标准</div>
+          <table style="width:100%; border-collapse:collapse; text-align:center">
+            <tr><th>等级</th><th>评价</th><th>分值区间</th><th>提成系数</th></tr>
+            <tr><td>S</td><td>卓越</td><td>≥95</td><td>1.0</td></tr>
+            <tr><td>A</td><td>优秀</td><td>85-94</td><td>1.0</td></tr>
+            <tr><td>B</td><td>良好</td><td>75-84</td><td>0.9</td></tr>
+            <tr><td>C</td><td>合格</td><td>60-74</td><td>0.6</td></tr>
+            <tr><td>D</td><td>不合格</td><td>&lt;60</td><td>0</td></tr>
+          </table>
+        </div>
+
+        <div style="text-align:right; font-size:18px; font-weight:bold; margin-top:20px">
+          总分：<span class="score-num" id="total_leader">0</span>｜等级：<span id="level_leader">D</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 本组专员页 -->
+    <div id="tab_team" class="page">
+      <h3>本组运营专员绩效列表</h3>
+      <div class="member-list" id="teamList"></div>
+    </div>
+
+    <!-- 人员管理页 -->
+    <div id="tab_manage" class="page">
+      <h3>人员管理（仅经理可见）</h3>
+      <div style="margin-bottom:16px">
         <input id="addName" placeholder="姓名" style="padding:8px; width:120px">
         <select id="addRole" style="padding:8px">
-          <option value="staff">专员</option>
-          <option value="leader">主管</option>
+          <option value="staff">运营专员</option>
+          <option value="leader">运营主管</option>
         </select>
         <input id="addGroup" placeholder="组名" style="padding:8px; width:120px">
-        <button onclick="addUser()" class="btn-primary">添加</button>
+        <button class="btn-primary" onclick="addUser()">添加人员</button>
       </div>
       <div class="member-list" id="allUserList"></div>
+      <div style="font-size:12px; color:#666; margin-top:8px">仅列表内人员可登录系统，初始密码统一为 flige5401</div>
     </div>
   </div>
 </div>
 
 <script>
-// 存储
-function saveUsers(d){localStorage.setItem('perf_users',JSON.stringify(d))}
-function loadUsers(){
-  let d=localStorage.getItem('perf_users')
-  if(d)return JSON.parse(d)
-  return {经理:{role:'manager',pwd:'flige5401',group:'总管理'}}
-}
-let users=loadUsers()
-let cur=null
-let editUser=null
-
-function $(id){return document.getElementById(id)}
-
-function showTab(t){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'))
-  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'))
-  $('tab_'+t).classList.add('active')
-  document.querySelector(`.nav-btn[onclick="showTab('${t}')"]`).classList.add('active')
-  if(t==='team')loadTeam()
-  if(t==='manage')loadManage()
+// ====================== 本地存储（永久保存账号）======================
+function saveUsers(data) { localStorage.setItem('perf_users', JSON.stringify(data)); }
+function loadUsers() {
+  const data = localStorage.getItem('perf_users');
+  if (data) return JSON.parse(data);
+  return {
+    "经理": { role: "manager", pwd: "flige5401", group: "总管理" }
+  };
 }
 
-function login(){
-  let u=$('loginUser').value.trim()
-  let p=$('loginPwd').value.trim()
-  users=loadUsers()
-  if(!users[u]||users[u].pwd!==p){alert('账号或密码错误');return}
-  cur={name:u,...users[u]}
-  $('loginPage').classList.remove('active')
-  $('mainPage').classList.add('active')
-  $('showName').innerText=cur.name
-  $('showGroup').innerText=cur.group
-  $('showRole').innerText=({manager:'经理',leader:'主管',staff:'专员'})[cur.role]
-  if(cur.role==='staff'){
-    document.querySelectorAll('.staff-only').forEach(x=>x.style.display='block')
-    document.querySelectorAll('.leader-only').forEach(x=>x.style.display='none')
-    document.querySelectorAll('.manager-only').forEach(x=>x.style.display='none')
-  }else if(cur.role==='leader'){
-    document.querySelectorAll('.staff-only').forEach(x=>x.style.display='none')
-    document.querySelectorAll('.leader-only').forEach(x=>x.style.display='block')
-    document.querySelectorAll('.manager-only').forEach(x=>x.style.display='none')
-  }else{
-    document.querySelectorAll('.staff-only,.leader-only,.manager-only').forEach(x=>x.style.display='block')
-  }
-  showTab('self')
-  calc()
-}
+let users = loadUsers();
+let currentUser = null;
+let editStaffUser = null;
 
-function logout(){cur=null;$('mainPage').classList.remove('active');$('loginPage').classList.add('active')}
-function showResetPwd(){$('loginPage').classList.remove('active');$('resetPwdPage').classList.add('active');$('rpUser').value=cur?.name||''}
-function backToLogin(){$('resetPwdPage').classList.remove('active');$('loginPage').classList.add('active')}
-function doResetPwd(){
-  if(!cur)return
-  let old=$('rpOld').value, nw=$('rpNew').value
-  if(users[cur.name].pwd!==old){alert('原密码错')}else{users[cur.name].pwd=nw;saveUsers(users);alert('成功');backToLogin()}
-}
+// 工具函数
+function $(id) { return document.getElementById(id); }
 
-function loadTeam(){
-  let html='', g=cur.group
-  for(let u in users){
-    if(users[u].role==='staff'&&users[u].group===g){
-      html+=`<div class="member-item"><button onclick="viewStaff('${u}')">查看/编辑</button> ${u}</div>`
+// ====================== 页面切换核心（修复空白页关键）======================
+function showTab(tabId) {
+  // 隐藏所有页面
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  // 移除所有按钮激活状态
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  
+  // 激活当前标签页和对应按钮
+  $(`tab_${tabId}`).classList.add('active');
+  document.querySelector(`.nav-btn[data-tab="${tabId}"]`).classList.add('active');
+  
+  // 加载对应页面数据
+  if (tabId === 'team') loadTeamList();
+  if (tabId === 'manage') loadManageList();
+  if (tabId === 'self') {
+    // 根据角色显示对应绩效页
+    if (currentUser.role === 'staff' || editStaffUser) {
+      $('.staff-page').style.display = 'block';
+      $('.leader-page').style.display = 'none';
+      calcStaffScore();
+    } else if (currentUser.role === 'leader') {
+      $('.staff-page').style.display = 'none';
+      $('.leader-page').style.display = 'block';
+      calcLeaderScore();
+    } else if (currentUser.role === 'manager') {
+      // 经理可切换查看两种页面
+      $('.staff-page').style.display = 'block';
+      $('.leader-page').style.display = 'block';
+      calcStaffScore();
+      calcLeaderScore();
     }
   }
-  $('teamList').innerHTML=html
 }
 
-function viewStaff(u){
-  editUser=u
-  showTab('self')
-  calc()
-}
+// ====================== 登录逻辑（修复空白页）======================
+function login() {
+  const username = $('loginUser').value.trim();
+  const password = $('loginPwd').value.trim();
+  users = loadUsers(); // 每次登录重新加载最新数据
 
-function loadManage(){
-  let html=''
-  for(let u in users){
-    if(u==='经理')continue
-    html+=`<div class="member-item">${u}｜${users[u].role==='leader'?'主管':'专员'}｜${users[u].group} 
-<button onclick="delUser('${u}')">删除</button></div>`
+  // 校验账号密码
+  if (!users[username]) {
+    alert('账号不存在，请联系经理添加');
+    return;
   }
-  $('allUserList').innerHTML=html
-}
-
-function addUser(){
-  let n=$('addName').value.trim(), r=$('addRole').value, g=$('addGroup').value.trim()
-  if(!n||users[n]){alert('姓名重复或为空');return}
-  users[n]={role:r,pwd:'flige5401',group:g||'未分组'}
-  saveUsers(users);loadManage();alert('添加成功')
-}
-
-function delUser(u){if(confirm('删除？')){delete users[u];saveUsers(users);loadManage()}}
-
-function calc(){
-  let t=0, target=editUser||cur.name
-  let su=users[target]
-  function val(id){return Number($(id).value)||0}
-  if(su.role==='staff'){
-    t=val('s1_1')+val('s1_2')+val('s2_1')+val('s2_2')+val('s2_3')+val('s3_1')+val('s3_2')+val('s3_3')+val('s5_1')-val('s5_2')
-  }else{
-    t=val('s1_1')+val('s1_2')+val('s2_1')+val('s2_2')+val('s2_3')+val('s4_1')+val('s4_2')+val('s4_3')+val('s5_1')-val('s5_2')
+  if (users[username].pwd !== password) {
+    alert('密码错误，请检查');
+    return;
   }
-  $('total').innerText=t
-  let lv='D';if(t>=95)lv='S';else if(t>=85)lv='A';else if(t>=75)lv='B';else if(t>=60)lv='C'
-  $('level').innerText=lv
+
+  // 登录成功，初始化当前用户
+  currentUser = { name: username, ...users[username] };
+  $('loginPage').classList.remove('active');
+  $('mainPage').classList.add('active');
+
+  // 填充用户信息
+  $('showName').innerText = currentUser.name;
+  $('showGroup').innerText = currentUser.group || '未分组';
+  $('showRole').innerText = {
+    manager: '运营经理',
+    leader: '运营主管',
+    staff: '运营专员'
+  }[currentUser.role];
+
+  // 控制导航栏显示（修复空白页核心）
+  if (currentUser.role === 'manager') {
+    document.querySelectorAll('.manager-only').forEach(el => el.style.display = 'inline-block');
+    document.querySelectorAll('.leader-only').forEach(el => el.style.display = 'inline-block');
+  } else if (currentUser.role === 'leader') {
+    document.querySelectorAll('.manager-only').forEach(el => el.style.display = 'none');
+    document.querySelectorAll('.leader-only').forEach(el => el.style.display = 'inline-block');
+  } else {
+    document.querySelectorAll('.manager-only, .leader-only').forEach(el => el.style.display = 'none');
+  }
+
+  // 首次加载显示我的绩效
+  showTab('self');
 }
 
-document.querySelectorAll('input,textarea').forEach(i=>i.oninput=calc)
+// ====================== 登出/改密 ======================
+function logout() {
+  currentUser = null;
+  editStaffUser = null;
+  $('mainPage').classList.remove('active');
+  $('loginPage').classList.add('active');
+  // 清空输入
+  $('loginUser').value = '';
+  $('loginPwd').value = '';
+}
+
+function showResetPwd() {
+  $('loginPage').classList.remove('active');
+  $('resetPwdPage').classList.add('active');
+  $('rpUser').value = currentUser?.name || '';
+}
+
+function backToLogin() {
+  $('resetPwdPage').classList.remove('active');
+  $('loginPage').classList.add('active');
+}
+
+function doResetPwd() {
+  if (!currentUser) {
+    alert('请先登录');
+    return;
+  }
+  const oldPwd = $('rpOld').value.trim();
+  const newPwd = $('rpNew').value.trim();
+
+  if (!oldPwd || !newPwd) {
+    alert('请填写完整信息');
+    return;
+  }
+  if (users[currentUser.name].pwd !== oldPwd) {
+    alert('原密码错误');
+    return;
+  }
+
+  // 修改密码并保存
+  users[currentUser.name].pwd = newPwd;
+  saveUsers(users);
+  alert('密码修改成功，请使用新密码登录');
+  logout();
+}
+
+// ====================== 人员管理（经理专用）======================
+function loadManageList() {
+  const list = $('allUserList');
+  list.innerHTML = '';
+  for (const name in users) {
+    if (name === '经理') continue;
+    const user = users[name];
+    const item = document.createElement('div');
+    item.className = 'member-item';
+    item.innerHTML = `
+      <div>${name}｜${user.role === 'leader' ? '运营主管' : '运营专员'}｜组：${user.group || '未分组'}</div>
+      <div><button class="btn-secondary" onclick="deleteUser('${name}')">删除</button></div>
+    `;
+    list.appendChild(item);
+  }
+}
+
+function addUser() {
+  const name = $('addName').value.trim();
+  const role = $('addRole').value;
+  const group = $('addGroup').value.trim();
+
+  if (!name) {
+    alert('请输入姓名');
+    return;
+  }
+  if (users[name]) {
+    alert('该姓名已存在');
+    return;
+  }
+
+  // 添加新用户，初始密码统一
+  users[name] = {
+    role: role,
+    pwd: 'flige5401',
+    group: group || '未分组'
+  };
+  saveUsers(users);
+  loadManageList();
+  alert(`添加成功！\n姓名：${name}\n角色：${role === 'leader' ? '运营主管' : '运营专员'}\n初始密码：flige5401`);
+}
+
+function deleteUser(name) {
+  if (!confirm(`确定删除 ${name}？该账号将无法登录`)) return;
+  delete users[name];
+  saveUsers(users);
+  loadManageList();
+}
+
+// ====================== 本组专员列表（主管专用）======================
+function loadTeamList() {
+  const list = $('teamList');
+  list.innerHTML = '';
+  const myGroup = currentUser.group;
+
+  for (const name in users) {
+    const user = users[name];
+    // 只显示自己组内的专员
+    if (user.role === 'staff' && user.group === myGroup) {
+      const item = document.createElement('div');
+      item.className = 'member-item';
+      item.innerHTML = `
+        <div>${name}｜${user.group}组</div>
+        <div><button class="btn-primary" onclick="viewStaff('${name}')">查看/编辑绩效</button></div>
+      `;
+      list.appendChild(item);
+    }
+  }
+}
+
+// 查看/编辑专员绩效
+function viewStaff(staffName) {
+  editStaffUser = staffName;
+  showTab('self');
+  // 加载专员数据
+  $('m-name').value = staffName;
+  calcStaffScore();
+}
+
+// ====================== 权限控制 ======================
+function applyPermissions() {
+  // 先禁用所有输入
+  document.querySelectorAll('input, textarea').forEach(el => el.disabled = true);
+
+  if (!currentUser) return;
+
+  // 经理：全部可编辑
+  if (currentUser.role === 'manager') {
+    document.querySelectorAll('input, textarea').forEach(el => el.disabled = false);
+    return;
+  }
+
+  // 专员：只能编辑自己的专员页内容
+  if (currentUser.role === 'staff') {
+    const staffAllow = [
+      'p1_1', 'p1_2', 'p2_1', 'p2_2', 'p2_3',
+      'p3_1', 'p3_2', 'p3_3', 'p5_1', 'p5_2'
+    ];
+    staffAllow.forEach(id => {
+      const el = $(id);
+      if (el) el.disabled = false;
+    });
+    return;
+  }
+
+  // 主管：只能编辑自己的主管页内容
+  if (currentUser.role === 'leader') {
+    const leaderAllow = [
+      'lp1_1', 'lp1_2', 'lp2_1', 'lp2_2', 'lp2_3',
+      'lp3_1', 'lp3_2', 'lp3_3', 'lp4_1', 'lp4_2'
+    ];
+    leaderAllow.forEach(id => {
+      const el = $(id);
+      if (el) el.disabled = false;
+    });
+    return;
+  }
+}
+
+// ====================== 分数计算 ======================
+function calcStaffScore() {
+  let total = 0;
+  const scores = [
+    's1_1', 's1_2', 's2_1', 's2_2', 's2_3',
+    's3_1', 's3_2', 's3_3', 's5_1'
+  ];
+  scores.forEach(id => {
+    total += Number($(id).value) || 0;
+  });
+  // 扣减扣分
+  total -= Number($('s5_2').value) || 0;
+
+  $('total_staff').innerText = total;
+  let level = 'D';
+  if (total >= 95) level = 'S';
+  else if (total >= 85) level = 'A';
+  else if (total >= 75) level = 'B';
+  else if (total >= 60) level = 'C';
+  $('level_staff').innerText = level;
+}
+
+function calcLeaderScore() {
+  let total = 0;
+  const scores = [
+    'ls1_1', 'ls1_2', 'ls2_1', 'ls2_2', 'ls2_3',
+    'ls3_1', 'ls3_2', 'ls3_3', 'ls4_1'
+  ];
+  scores.forEach(id => {
+    total += Number($(id).value) || 0;
+  });
+  total -= Number($('ls4_2').value) || 0;
+
+  $('total_leader').innerText = total;
+  let level = 'D';
+  if (total >= 95) level = 'S';
+  else if (total >= 85) level = 'A';
+  else if (total >= 75) level = 'B';
+  else if (total >= 60) level = 'C';
+  $('level_leader').innerText = level;
+}
+
+// 绑定输入事件，实时计算分数
+document.querySelectorAll('input[type="number"]').forEach(input => {
+  input.addEventListener('input', () => {
+    if (currentUser?.role === 'staff' || editStaffUser) calcStaffScore();
+    if (currentUser?.role === 'leader') calcLeaderScore();
+  });
+});
+
+// 页面加载完成后初始化
+window.onload = function() {
+  users = loadUsers();
+  // 确保登录页默认显示
+  $('loginPage').classList.add('active');
+};
 </script>
 </body>
 </html>
